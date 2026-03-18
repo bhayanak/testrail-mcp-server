@@ -1,0 +1,35 @@
+[
+  {
+    "id": 1,
+    "name": "E-Commerce Platform",
+    "announcement": "Q1 release testing in progress",
+    "show_announcement": true,
+    "is_completed": false,
+    "completed_on": null,
+    "suite_mode": 3,
+    "default_role_id": null,
+    "url": "https://example.testrail.io/index.php?/projects/overview/1"
+  },
+  {
+    "id": 2,
+    "name": "Mobile App",
+    "announcement": null,
+    "show_announcement": false,
+    "is_completed": false,
+    "completed_on": null,
+    "suite_mode": 1,
+    "default_role_id": null,
+    "url": "https://example.testrail.io/index.php?/projects/overview/2"
+  },
+  {
+    "id": 3,
+    "name": "Legacy Backend",
+    "announcement": "Migration complete",
+    "show_announcement": false,
+    "is_completed": true,
+    "completed_on": 1700000000,
+    "suite_mode": 1,
+    "default_role_id": null,
+    "url": "https://example.testrail.io/index.php?/projects/overview/3"
+  }
+]
