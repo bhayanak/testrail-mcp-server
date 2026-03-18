@@ -2,6 +2,11 @@
   "name": "testrail-mcp-server-monorepo",
   "private": true,
   "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bhayanak/testrail-mcp-server.git"
+  },
   "packageManager": "pnpm@9.15.4",
   "engines": {
     "node": ">=18"
@@ -16,7 +21,13 @@
     "typecheck": "pnpm -r typecheck",
     "ci": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm build",
     "validate": "pnpm ci",
-    "clean": "pnpm -r clean"
+    "clean": "pnpm -r clean",
+    "release": "npx standard-version",
+    "release:minor": "npx standard-version --release-as minor",
+    "release:major": "npx standard-version --release-as major",
+    "prerelease": "pnpm run ci",
+    "postrelease": "node -e \"const v=require('./package.json').version; const {execSync}=require('child_process'); execSync('npm version '+v+' --no-git-tag-version', {cwd:'packages/server'}); execSync('npm version '+v+' --no-git-tag-version', {cwd:'packages/vscode-extension'}); execSync('git add packages/server/package.json packages/vscode-extension/package.json'); execSync('git commit --amend --no-edit'); execSync('git tag -f v'+v);\"",
+    "sbom": "trivy fs --severity CRITICAL,HIGH --scanners vuln ."
   },
   "pnpm": {
     "overrides": {

@@ -1,7 +1,7 @@
 <p align="center">
   <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/node-%3E%3D18-blue.svg" alt="Node.js ≥18"></a>
   <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-5.8-blue.svg?logo=typescript&logoColor=white" alt="TypeScript 5.8"></a>
-  <a href="#license"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+  <a href="https://github.com/bhayanak/testrail-mcp-server/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
   <a href="#available-tools"><img src="https://img.shields.io/badge/MCP%20Tools-27-blueviolet.svg" alt="27 MCP Tools"></a>
 </p>
 
@@ -290,3 +290,7 @@ TESTRAIL_API_KEY=your-api-key \
 TESTRAIL_PROJECT_ID=1 \
 npx @modelcontextprotocol/inspector node dist/index.js
 ```
+
+## License
+
+[MIT](https://github.com/bhayanak/testrail-mcp-server/blob/main/LICENSE)
