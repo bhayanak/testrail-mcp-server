@@ -41,9 +41,7 @@ describe('handleAddCase', () => {
       estimate: '5m',
       milestone_id: 5,
       refs: 'JIRA-100',
-      custom_steps_separated: [
-        { content: 'Step 1', expected: 'Result 1' },
-      ],
+      custom_steps_separated: [{ content: 'Step 1', expected: 'Result 1' }],
     });
 
     const body = postSpy.mock.calls[0][1];

@@ -4,8 +4,18 @@ import type { Case } from '../testrail/types.js';
 import { formatCases, formatCase } from '../formatter.js';
 
 export const getCasesSchema = {
-  project_id: z.number().int().positive().optional().describe('TestRail project ID (defaults to configured project)'),
-  suite_id: z.number().int().positive().optional().describe('Suite ID (required for multi-suite projects)'),
+  project_id: z
+    .number()
+    .int()
+    .positive()
+    .optional()
+    .describe('TestRail project ID (defaults to configured project)'),
+  suite_id: z
+    .number()
+    .int()
+    .positive()
+    .optional()
+    .describe('Suite ID (required for multi-suite projects)'),
   section_id: z.number().int().positive().optional().describe('Section ID to filter cases'),
   priority_id: z.string().max(100).optional().describe('Comma-separated priority IDs to filter'),
   type_id: z.string().max(100).optional().describe('Comma-separated type IDs to filter'),
@@ -36,10 +46,7 @@ export async function handleGetCases(
   if (params.limit) queryParams.limit = params.limit;
   if (params.offset) queryParams.offset = params.offset;
 
-  const response = await client.getPaginated<Case>(
-    `get_cases/${params.project_id}`,
-    queryParams,
-  );
+  const response = await client.getPaginated<Case>(`get_cases/${params.project_id}`, queryParams);
 
   return {
     content: [
@@ -68,10 +75,7 @@ export const getCaseSchema = {
   case_id: z.number().int().positive().describe('TestRail case ID'),
 };
 
-export async function handleGetCase(
-  client: TestRailClient,
-  params: { case_id: number },
-) {
+export async function handleGetCase(client: TestRailClient, params: { case_id: number }) {
   const testCase = await client.get<Case>(`get_case/${params.case_id}`);
   return {
     content: [{ type: 'text' as const, text: formatCase(testCase) }],

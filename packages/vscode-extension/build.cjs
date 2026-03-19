@@ -27,9 +27,6 @@ const serverConfig = {
   target: 'node18',
   sourcemap: true,
   minify: !isWatch,
-  banner: {
-    js: '#!/usr/bin/env node',
-  },
 };
 
 async function build() {

@@ -4,7 +4,12 @@ import type { Milestone } from '../testrail/types.js';
 import { formatMilestones } from '../formatter.js';
 
 export const getMilestonesSchema = {
-  project_id: z.number().int().positive().optional().describe('TestRail project ID (defaults to configured project)'),
+  project_id: z
+    .number()
+    .int()
+    .positive()
+    .optional()
+    .describe('TestRail project ID (defaults to configured project)'),
   is_completed: z.boolean().optional().describe('Filter by completion status'),
   is_started: z.boolean().optional().describe('Filter by started status'),
 };

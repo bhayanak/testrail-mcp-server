@@ -1,4 +1,17 @@
-import type { Project, Case, Run, Result, Plan, Milestone, Suite, Section, Test, Status, User, PaginatedResponse } from './testrail/types.js';
+import type {
+  Project,
+  Case,
+  Run,
+  Result,
+  Plan,
+  Milestone,
+  Suite,
+  Section,
+  Test,
+  Status,
+  User,
+  PaginatedResponse,
+} from './testrail/types.js';
 
 const MAX_OUTPUT_CHARS = 20_000;
 
@@ -56,7 +69,10 @@ export function formatProject(project: Project): string {
 
 // ─── Cases ───────────────────────────────────────────────────────
 
-export function formatCases(cases: Case[], pagination?: { offset: number; size: number; limit: number }): string {
+export function formatCases(
+  cases: Case[],
+  pagination?: { offset: number; size: number; limit: number },
+): string {
   if (cases.length === 0) return 'No test cases found.';
   const header = pagination
     ? `# Test Cases (showing ${cases.length}, offset ${pagination.offset}, total matched: ${pagination.size})\n\n`
@@ -99,20 +115,25 @@ export function formatCase(c: Case): string {
 
 // ─── Runs ────────────────────────────────────────────────────────
 
-export function formatRuns(runs: Run[], pagination?: { offset: number; size: number; limit: number }): string {
+export function formatRuns(
+  runs: Run[],
+  pagination?: { offset: number; size: number; limit: number },
+): string {
   if (runs.length === 0) return 'No test runs found.';
   const header = pagination
     ? `# Test Runs (showing ${runs.length}, offset ${pagination.offset}, total: ${pagination.size})\n\n`
     : `# Test Runs (${runs.length})\n\n`;
   const rows = runs.map((r) => {
-    const total = r.passed_count + r.failed_count + r.blocked_count + r.untested_count + r.retest_count;
+    const total =
+      r.passed_count + r.failed_count + r.blocked_count + r.untested_count + r.retest_count;
     return `- **[R${r.id}] ${r.name}** — ✅${r.passed_count} ❌${r.failed_count} 🚫${r.blocked_count} ⏸${r.untested_count} 🔄${r.retest_count} (${total} total) ${r.is_completed ? '[Closed]' : '[Active]'}`;
   });
   return truncate(header + rows.join('\n'));
 }
 
 export function formatRun(run: Run): string {
-  const total = run.passed_count + run.failed_count + run.blocked_count + run.untested_count + run.retest_count;
+  const total =
+    run.passed_count + run.failed_count + run.blocked_count + run.untested_count + run.retest_count;
   const lines = [
     `# Test Run: ${run.name} (R${run.id})`,
     '',
@@ -143,7 +164,10 @@ export function formatRun(run: Run): string {
 
 // ─── Results ─────────────────────────────────────────────────────
 
-export function formatResults(results: Result[], pagination?: { offset: number; size: number; limit: number }): string {
+export function formatResults(
+  results: Result[],
+  pagination?: { offset: number; size: number; limit: number },
+): string {
   if (results.length === 0) return 'No results found.';
   const header = pagination
     ? `# Test Results (showing ${results.length}, offset ${pagination.offset}, total: ${pagination.size})\n\n`
@@ -173,14 +197,20 @@ export function formatPlans(plans: Plan[]): string {
   if (plans.length === 0) return 'No test plans found.';
   const header = `# Test Plans (${plans.length})\n\n`;
   const rows = plans.map((p) => {
-    const total = p.passed_count + p.failed_count + p.blocked_count + p.untested_count + p.retest_count;
+    const total =
+      p.passed_count + p.failed_count + p.blocked_count + p.untested_count + p.retest_count;
     return `- **[Plan ${p.id}] ${p.name}** — ✅${p.passed_count} ❌${p.failed_count} 🚫${p.blocked_count} (${total} total) ${p.is_completed ? '[Closed]' : '[Active]'}`;
   });
   return truncate(header + rows.join('\n'));
 }
 
 export function formatPlan(plan: Plan): string {
-  const total = plan.passed_count + plan.failed_count + plan.blocked_count + plan.untested_count + plan.retest_count;
+  const total =
+    plan.passed_count +
+    plan.failed_count +
+    plan.blocked_count +
+    plan.untested_count +
+    plan.retest_count;
   const lines = [
     `# Test Plan: ${plan.name} (ID: ${plan.id})`,
     '',
@@ -193,9 +223,7 @@ export function formatPlan(plan: Plan): string {
   if (plan.entries && plan.entries.length > 0) {
     lines.push('', '## Entries');
     plan.entries.forEach((e) => {
-      lines.push(
-        `- **${e.name}** (Suite: ${e.suite_id}) — ${e.runs.length} run(s)`,
-      );
+      lines.push(`- **${e.name}** (Suite: ${e.suite_id}) — ${e.runs.length} run(s)`);
     });
   }
   return truncate(lines.join('\n'));

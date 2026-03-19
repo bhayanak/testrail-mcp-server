@@ -6,8 +6,12 @@ const baseConfig: TestRailConfig = {
   baseUrl: 'https://example.testrail.io',
   username: 'user@example.com',
   apiKey: 'test-api-key',
+  projectId: 1,
   timeoutMs: 5000,
   maxResults: 250,
+  cacheDir: '/tmp/testrail-test-cache',
+  cacheTtlMs: 604800000,
+  cacheEnabled: false,
 };
 
 function createClient(overrides?: Partial<TestRailConfig>) {

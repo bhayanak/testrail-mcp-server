@@ -18,7 +18,10 @@ describe('handleGetRuns', () => {
   it('should return formatted runs', async () => {
     const client = createMockClient({
       getPaginated: vi.fn().mockResolvedValue({
-        offset: 0, limit: 250, size: 1, _links: { next: null, prev: null },
+        offset: 0,
+        limit: 250,
+        size: 1,
+        _links: { next: null, prev: null },
         items: [runFixture],
       }),
     });
@@ -31,7 +34,11 @@ describe('handleGetRuns', () => {
   it('should handle empty runs', async () => {
     const client = createMockClient({
       getPaginated: vi.fn().mockResolvedValue({
-        offset: 0, limit: 250, size: 0, _links: { next: null, prev: null }, items: [],
+        offset: 0,
+        limit: 250,
+        size: 0,
+        _links: { next: null, prev: null },
+        items: [],
       }),
     });
 
@@ -41,7 +48,11 @@ describe('handleGetRuns', () => {
 
   it('should pass is_completed filter', async () => {
     const getPaginatedSpy = vi.fn().mockResolvedValue({
-      offset: 0, limit: 250, size: 0, _links: { next: null, prev: null }, items: [],
+      offset: 0,
+      limit: 250,
+      size: 0,
+      _links: { next: null, prev: null },
+      items: [],
     });
     const client = createMockClient({ getPaginated: getPaginatedSpy });
 
@@ -51,7 +62,11 @@ describe('handleGetRuns', () => {
 
   it('should pass milestone_id, limit, and offset params', async () => {
     const getPaginatedSpy = vi.fn().mockResolvedValue({
-      offset: 10, limit: 50, size: 0, _links: { next: null, prev: null }, items: [],
+      offset: 10,
+      limit: 50,
+      size: 0,
+      _links: { next: null, prev: null },
+      items: [],
     });
     const client = createMockClient({ getPaginated: getPaginatedSpy });
 

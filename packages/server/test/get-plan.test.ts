@@ -18,7 +18,10 @@ describe('handleGetPlans', () => {
   it('should return formatted plans', async () => {
     const client = createMockClient({
       getPaginated: vi.fn().mockResolvedValue({
-        offset: 0, limit: 250, size: 1, _links: { next: null, prev: null },
+        offset: 0,
+        limit: 250,
+        size: 1,
+        _links: { next: null, prev: null },
         items: [planFixture],
       }),
     });
@@ -30,7 +33,11 @@ describe('handleGetPlans', () => {
   it('should handle empty plans', async () => {
     const client = createMockClient({
       getPaginated: vi.fn().mockResolvedValue({
-        offset: 0, limit: 250, size: 0, _links: { next: null, prev: null }, items: [],
+        offset: 0,
+        limit: 250,
+        size: 0,
+        _links: { next: null, prev: null },
+        items: [],
       }),
     });
 
@@ -40,7 +47,11 @@ describe('handleGetPlans', () => {
 
   it('should pass milestone_id filter', async () => {
     const getPaginatedSpy = vi.fn().mockResolvedValue({
-      offset: 0, limit: 250, size: 0, _links: { next: null, prev: null }, items: [],
+      offset: 0,
+      limit: 250,
+      size: 0,
+      _links: { next: null, prev: null },
+      items: [],
     });
     const client = createMockClient({ getPaginated: getPaginatedSpy });
 

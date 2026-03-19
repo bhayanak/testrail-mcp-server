@@ -15,23 +15,30 @@ A **Model Context Protocol (MCP) server** for [TestRail](https://www.testrail.co
 - **Reference Data Caching** — Statuses, priorities, case types cached for 5 minutes
 
 ## Installation
-
+Its available at : [TestRail MCP Server](https://www.npmjs.com/package/testrail-mcp-server) and exposes it to AI assistants (GitHub Copilot, Claude, etc.) directly in your editor.
 ```bash
 npm install -g @testrail-mcp/server
 ```
 
+
 ## Configuration
 
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `TESTRAIL_BASE_URL` | Yes | — | TestRail instance URL (e.g., `https://company.testrail.io`) |
-| `TESTRAIL_USERNAME` | Yes | — | TestRail username (email) |
-| `TESTRAIL_API_KEY` | Yes | — | TestRail API key |
-| `TESTRAIL_PROJECT_ID` | **Yes** | — | Default project ID (tools auto-use this when `project_id` is omitted) |
-| `TESTRAIL_TIMEOUT_MS` | No | `30000` | HTTP request timeout |
-| `TESTRAIL_MAX_RESULTS` | No | `250` | Default page size (max 250) |
+| Setting (VS Code)         | Env Var                    | Required | Default                  | Description |
+|--------------------------|----------------------------|----------|--------------------------|-------------|
+| `testrailMcp.apiKey`     | `TESTRAIL_API_KEY`         | Yes      | —                        | TestRail API key (generate at My Settings > API Keys) |
+| `testrailMcp.baseUrl`    | `TESTRAIL_BASE_URL`        | Yes      | —                        | TestRail instance URL (e.g., `https://company.testrail.io`) |
+| `testrailMcp.username`   | `TESTRAIL_USERNAME`        | Yes      | —                        | TestRail username (email address) |
+| `testrailMcp.projectId`  | `TESTRAIL_PROJECT_ID`      | Yes      | —                        | Default project ID (used when not specified in tool params) |
+| `testrailMcp.timeout`    | `TESTRAIL_TIMEOUT_MS`      | No       | `30000`                  | HTTP request timeout in milliseconds |
+| `testrailMcp.maxResults` | `TESTRAIL_MAX_RESULTS`     | No       | `250`                    | Default page size for list queries (max 250) |
+| `testrailMcp.cacheEnabled` | `TESTRAIL_CACHE_ENABLED`  | No       | `true`                   | Enable disk caching for semi-static TestRail data |
+| `testrailMcp.cacheTtlHours` | `TESTRAIL_CACHE_TTL_HOURS` | No     | `168` (7 days)           | Cache time-to-live in hours |
+| `testrailMcp.cacheDir`   | `TESTRAIL_CACHE_DIR`       | No       | `~/.testrail-mcp-cache`  | Directory for disk cache files |
 
 ## Usage
+
+### VS Code extension
+Install [Testrail MCP Server VS Code extension](https://marketplace.visualstudio.com/search?term=TestRail%20MCP%20Server&target=VSCode&category=AI&sortBy=Relevance)
 
 ### Standalone (stdio transport)
 
@@ -52,25 +59,6 @@ testrail-mcp-server
     "testrail": {
       "command": "npx",
       "args": ["@testrail-mcp/server"],
-      "env": {
-        "TESTRAIL_BASE_URL": "https://your-instance.testrail.io",
-        "TESTRAIL_USERNAME": "your-email@example.com",
-        "TESTRAIL_API_KEY": "your-api-key",
-        "TESTRAIL_PROJECT_ID": "1"
-      }
-    }
-  }
-}
-```
-
-### VS Code (`.vscode/mcp.json`)
-
-```json
-{
-  "servers": {
-    "testrail": {
-      "command": "node",
-      "args": ["${workspaceFolder}/packages/server/dist/index.js"],
       "env": {
         "TESTRAIL_BASE_URL": "https://your-instance.testrail.io",
         "TESTRAIL_USERNAME": "your-email@example.com",

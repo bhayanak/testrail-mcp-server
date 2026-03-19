@@ -4,7 +4,12 @@ import type { Run } from '../testrail/types.js';
 import { formatRuns, formatRun } from '../formatter.js';
 
 export const getRunsSchema = {
-  project_id: z.number().int().positive().optional().describe('TestRail project ID (defaults to configured project)'),
+  project_id: z
+    .number()
+    .int()
+    .positive()
+    .optional()
+    .describe('TestRail project ID (defaults to configured project)'),
   is_completed: z.boolean().optional().describe('Filter by completion status'),
   milestone_id: z.string().max(100).optional().describe('Comma-separated milestone IDs'),
   limit: z.number().int().min(1).max(250).optional().describe('Max results per page'),
@@ -27,10 +32,7 @@ export async function handleGetRuns(
   if (params.limit) queryParams.limit = params.limit;
   if (params.offset) queryParams.offset = params.offset;
 
-  const response = await client.getPaginated<Run>(
-    `get_runs/${params.project_id}`,
-    queryParams,
-  );
+  const response = await client.getPaginated<Run>(`get_runs/${params.project_id}`, queryParams);
 
   return {
     content: [
@@ -59,10 +61,7 @@ export const getRunSchema = {
   run_id: z.number().int().positive().describe('TestRail run ID'),
 };
 
-export async function handleGetRun(
-  client: TestRailClient,
-  params: { run_id: number },
-) {
+export async function handleGetRun(client: TestRailClient, params: { run_id: number }) {
   const run = await client.get<Run>(`get_run/${params.run_id}`);
   return {
     content: [{ type: 'text' as const, text: formatRun(run) }],

@@ -18,7 +18,10 @@ describe('handleGetResultsForRun', () => {
   it('should return formatted results', async () => {
     const client = createMockClient({
       getPaginated: vi.fn().mockResolvedValue({
-        offset: 0, limit: 250, size: 4, _links: { next: null, prev: null },
+        offset: 0,
+        limit: 250,
+        size: 4,
+        _links: { next: null, prev: null },
         items: resultsFixture.results,
       }),
     });
@@ -31,7 +34,11 @@ describe('handleGetResultsForRun', () => {
   it('should handle empty results', async () => {
     const client = createMockClient({
       getPaginated: vi.fn().mockResolvedValue({
-        offset: 0, limit: 250, size: 0, _links: { next: null, prev: null }, items: [],
+        offset: 0,
+        limit: 250,
+        size: 0,
+        _links: { next: null, prev: null },
+        items: [],
       }),
     });
 
@@ -41,7 +48,11 @@ describe('handleGetResultsForRun', () => {
 
   it('should filter by status', async () => {
     const getPaginatedSpy = vi.fn().mockResolvedValue({
-      offset: 0, limit: 250, size: 0, _links: { next: null, prev: null }, items: [],
+      offset: 0,
+      limit: 250,
+      size: 0,
+      _links: { next: null, prev: null },
+      items: [],
     });
     const client = createMockClient({ getPaginated: getPaginatedSpy });
 
@@ -51,7 +62,11 @@ describe('handleGetResultsForRun', () => {
 
   it('should pass limit and offset params', async () => {
     const getPaginatedSpy = vi.fn().mockResolvedValue({
-      offset: 10, limit: 50, size: 0, _links: { next: null, prev: null }, items: [],
+      offset: 10,
+      limit: 50,
+      size: 0,
+      _links: { next: null, prev: null },
+      items: [],
     });
     const client = createMockClient({ getPaginated: getPaginatedSpy });
 
@@ -65,7 +80,10 @@ describe('handleGetResultsForCase', () => {
   it('should return results for a specific case', async () => {
     const client = createMockClient({
       getPaginated: vi.fn().mockResolvedValue({
-        offset: 0, limit: 250, size: 1, _links: { next: null, prev: null },
+        offset: 0,
+        limit: 250,
+        size: 1,
+        _links: { next: null, prev: null },
         items: [resultsFixture.results[0]],
       }),
     });

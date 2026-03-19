@@ -1,24 +1,25 @@
 import * as vscode from 'vscode';
-import { spawn, ChildProcess } from 'child_process';
 import * as path from 'path';
 
-let serverProcess: ChildProcess | null = null;
+let mcpDisposable: vscode.Disposable | null = null;
 let outputChannel: vscode.OutputChannel;
 
 export function activate(context: vscode.ExtensionContext) {
   outputChannel = vscode.window.createOutputChannel('TestRail MCP');
   outputChannel.appendLine('TestRail MCP extension activated');
 
-  // Start the MCP server
-  startServer(context);
+  // Register the MCP server
+  registerMcpServer(context);
 
-  // Restart when config changes
+  // Notify on config changes (env vars are only read at process spawn)
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration((e) => {
       if (e.affectsConfiguration('testrailMcp')) {
-        outputChannel.appendLine('Configuration changed, restarting server...');
-        stopServer();
-        startServer(context);
+        outputChannel.appendLine('Configuration changed — re-registering MCP server...');
+        registerMcpServer(context);
+        vscode.window.showInformationMessage(
+          'TestRail MCP settings changed. The MCP server will restart with updated configuration.',
+        );
       }
     }),
   );
@@ -27,68 +28,71 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand('testrailMcp.restart', () => {
       outputChannel.appendLine('Manual restart requested');
-      stopServer();
-      startServer(context);
+      registerMcpServer(context);
+      vscode.window.showInformationMessage('TestRail MCP server restarted.');
     }),
   );
 }
 
-function startServer(context: vscode.ExtensionContext) {
+function registerMcpServer(context: vscode.ExtensionContext) {
+  // Dispose previous registration if any
+  if (mcpDisposable) {
+    mcpDisposable.dispose();
+    mcpDisposable = null;
+  }
+
   const config = vscode.workspace.getConfiguration('testrailMcp');
 
+  const apiKey = config.get<string>('apiKey', '');
   const baseUrl = config.get<string>('baseUrl', '');
   const username = config.get<string>('username', '');
-  const apiKey = config.get<string>('apiKey', '');
   const projectId = config.get<string>('projectId', '');
 
-  if (!baseUrl || !username || !apiKey || !projectId) {
+  if (!apiKey || !baseUrl || !username || !projectId) {
     outputChannel.appendLine(
-      'TestRail MCP: Missing required configuration. Set testrailMcp.baseUrl, testrailMcp.username, testrailMcp.apiKey, and testrailMcp.projectId in settings.',
+      'TestRail MCP: Missing required configuration. Set testrailMcp.apiKey, testrailMcp.baseUrl, testrailMcp.username, and testrailMcp.projectId in settings.',
     );
     return;
   }
 
   const serverPath = path.join(context.extensionPath, 'dist', 'server.js');
 
+  const cacheEnabled = config.get<boolean>('cacheEnabled', true);
+  const cacheTtlHours = config.get<number>('cacheTtlHours', 168);
+  const cacheDir = config.get<string>('cacheDir', '');
+
   const env: Record<string, string> = {
-    ...process.env as Record<string, string>,
     TESTRAIL_BASE_URL: baseUrl,
     TESTRAIL_USERNAME: username,
     TESTRAIL_API_KEY: apiKey,
     TESTRAIL_PROJECT_ID: projectId,
     TESTRAIL_TIMEOUT_MS: String(config.get<number>('timeout', 30000)),
     TESTRAIL_MAX_RESULTS: String(config.get<number>('maxResults', 250)),
+    TESTRAIL_CACHE_ENABLED: String(cacheEnabled),
+    TESTRAIL_CACHE_TTL_HOURS: String(cacheTtlHours),
+    ...(cacheDir ? { TESTRAIL_CACHE_DIR: cacheDir } : {}),
   };
 
-  serverProcess = spawn('node', [serverPath], {
-    env,
-    stdio: ['pipe', 'pipe', 'pipe'],
+  mcpDisposable = vscode.lm.registerMcpServerDefinitionProvider('testrail-mcp', {
+    provideMcpServerDefinitions(): vscode.McpStdioServerDefinition[] {
+      return [
+        new vscode.McpStdioServerDefinition(
+          'TestRail MCP',
+          process.execPath,
+          [serverPath],
+          env,
+        ),
+      ];
+    },
   });
 
-  serverProcess.stderr?.on('data', (data: Buffer) => {
-    outputChannel.appendLine(data.toString().trim());
-  });
-
-  serverProcess.on('error', (err) => {
-    outputChannel.appendLine(`Server error: ${err.message}`);
-  });
-
-  serverProcess.on('exit', (code) => {
-    outputChannel.appendLine(`Server exited with code ${code}`);
-    serverProcess = null;
-  });
-
-  outputChannel.appendLine(`TestRail MCP server started (PID: ${serverProcess.pid})`);
-}
-
-function stopServer() {
-  if (serverProcess) {
-    outputChannel.appendLine('Stopping TestRail MCP server...');
-    serverProcess.kill('SIGTERM');
-    serverProcess = null;
-  }
+  context.subscriptions.push(mcpDisposable);
+  outputChannel.appendLine('TestRail MCP server registered via MCP API');
 }
 
 export function deactivate() {
-  stopServer();
+  if (mcpDisposable) {
+    mcpDisposable.dispose();
+    mcpDisposable = null;
+  }
 }

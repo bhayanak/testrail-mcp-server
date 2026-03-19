@@ -1,36 +1,83 @@
 import { McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import type { TestRailConfig } from './testrail/types.js';
+import type { TestRailConfig, Suite, Section, Case, Milestone, User } from './testrail/types.js';
 import { TestRailClient, TestRailApiError } from './testrail/client.js';
 import { maskConfig } from './config.js';
+import { DiskCache } from './cache.js';
+import {
+  formatSuites,
+  formatSections,
+  formatCases,
+  formatMilestones,
+  formatUsers,
+} from './formatter.js';
 
 // Tool handlers
-import { getProjectsSchema, handleGetProjects, getProjectSchema, handleGetProject } from './tools/get-projects.js';
+import {
+  getProjectsSchema,
+  handleGetProjects,
+  getProjectSchema,
+  handleGetProject,
+} from './tools/get-projects.js';
 import { getCasesSchema, handleGetCases, getCaseSchema, handleGetCase } from './tools/get-cases.js';
 import { getRunsSchema, handleGetRuns, getRunSchema, handleGetRun } from './tools/get-runs.js';
-import { getResultsForRunSchema, handleGetResultsForRun, getResultsForCaseSchema, handleGetResultsForCase } from './tools/get-results.js';
+import {
+  getResultsForRunSchema,
+  handleGetResultsForRun,
+  getResultsForCaseSchema,
+  handleGetResultsForCase,
+} from './tools/get-results.js';
 import { getTestsSchema, handleGetTests } from './tools/get-tests.js';
 import { getPlansSchema, handleGetPlans, getPlanSchema, handleGetPlan } from './tools/get-plans.js';
 import { getMilestonesSchema, handleGetMilestones } from './tools/get-milestones.js';
 import {
-  getStatusesSchema, handleGetStatuses,
-  getPrioritiesSchema, handleGetPriorities,
-  getCaseTypesSchema, handleGetCaseTypes,
-  getCaseFieldsSchema, handleGetCaseFields,
-  getResultFieldsSchema, handleGetResultFields,
-  getTemplatesSchema, handleGetTemplates,
-  getUsersSchema, handleGetUsers,
-  getSuitesSchema, handleGetSuites,
-  getSectionsSchema, handleGetSections,
+  getStatusesSchema,
+  handleGetStatuses,
+  getPrioritiesSchema,
+  handleGetPriorities,
+  getCaseTypesSchema,
+  handleGetCaseTypes,
+  getCaseFieldsSchema,
+  handleGetCaseFields,
+  getResultFieldsSchema,
+  handleGetResultFields,
+  getTemplatesSchema,
+  handleGetTemplates,
+  getUsersSchema,
+  handleGetUsers,
+  getSuitesSchema,
+  handleGetSuites,
+  getSectionsSchema,
+  handleGetSections,
 } from './tools/get-metadata.js';
-import { addResultForCaseSchema, handleAddResultForCase, addResultsForCasesSchema, handleAddResultsForCases } from './tools/add-result.js';
+import {
+  addResultForCaseSchema,
+  handleAddResultForCase,
+  addResultsForCasesSchema,
+  handleAddResultsForCases,
+} from './tools/add-result.js';
 import { addRunSchema, handleAddRun, closeRunSchema, handleCloseRun } from './tools/add-run.js';
-import { addCaseSchema, handleAddCase, updateCaseSchema, handleUpdateCase } from './tools/add-case.js';
+import {
+  addCaseSchema,
+  handleAddCase,
+  updateCaseSchema,
+  handleUpdateCase,
+} from './tools/add-case.js';
 import { findCasesByPathSchema, handleFindCasesByPath } from './tools/find-cases-by-path.js';
+import {
+  getCacheStatusSchema,
+  handleGetCacheStatus,
+  invalidateCacheSchema,
+  handleInvalidateCache,
+  refreshCacheSchema,
+} from './tools/cache-tools.js';
 
 const startTime = Date.now();
 
-type ToolResult = { content: Array<{ type: 'text'; text: string }>; structuredContent: Record<string, unknown> };
+type ToolResult = {
+  content: Array<{ type: 'text'; text: string }>;
+  structuredContent: Record<string, unknown>;
+};
 
 function wrapHandler<T>(
   handler: (client: TestRailClient, params: T) => Promise<ToolResult>,
@@ -42,7 +89,12 @@ function wrapHandler<T>(
     } catch (error) {
       if (error instanceof TestRailApiError) {
         return {
-          content: [{ type: 'text' as const, text: `TestRail API Error (${error.statusCode}): ${error.message}` }],
+          content: [
+            {
+              type: 'text' as const,
+              text: `TestRail API Error (${error.statusCode}): ${error.message}`,
+            },
+          ],
           isError: true as const,
         };
       }
@@ -57,18 +109,29 @@ function wrapHandler<T>(
 
 /** Resolve optional project_id using configured default */
 function withProjectDefault<T extends { project_id?: number }>(
-  handler: (client: TestRailClient, params: Omit<T, 'project_id'> & { project_id: number }) => Promise<ToolResult>,
+  handler: (
+    client: TestRailClient,
+    params: Omit<T, 'project_id'> & { project_id: number },
+  ) => Promise<ToolResult>,
   client: TestRailClient,
   defaultProjectId: number,
 ) {
   return async (params: T) => {
     try {
-      const resolved = { ...params, project_id: params.project_id ?? defaultProjectId } as Omit<T, 'project_id'> & { project_id: number };
+      const resolved = { ...params, project_id: params.project_id ?? defaultProjectId } as Omit<
+        T,
+        'project_id'
+      > & { project_id: number };
       return await handler(client, resolved);
     } catch (error) {
       if (error instanceof TestRailApiError) {
         return {
-          content: [{ type: 'text' as const, text: `TestRail API Error (${error.statusCode}): ${error.message}` }],
+          content: [
+            {
+              type: 'text' as const,
+              text: `TestRail API Error (${error.statusCode}): ${error.message}`,
+            },
+          ],
           isError: true as const,
         };
       }
@@ -83,6 +146,11 @@ function withProjectDefault<T extends { project_id?: number }>(
 
 export function createServer(config: TestRailConfig) {
   const client = new TestRailClient(config);
+  const cache = new DiskCache({
+    cacheDir: config.cacheDir,
+    cacheTtlMs: config.cacheTtlMs,
+    cacheEnabled: config.cacheEnabled,
+  });
 
   const server = new McpServer({
     name: 'testrail-mcp-server',
@@ -107,9 +175,49 @@ export function createServer(config: TestRailConfig) {
 
   server.tool(
     'get_cases',
-    `List test cases in a TestRail project (defaults to project ${config.projectId}). Requires suite_id for multi-suite projects. Use section_id to filter by section. Supports filtering by priority, type, and text search. TIP: If you need to find cases by section name/path, use the find_cases_by_path tool instead.`,
+    `List test cases in a TestRail project (defaults to project ${config.projectId}). Requires suite_id for multi-suite projects. Use section_id to filter by section. Supports filtering by priority, type, and text search. Uses disk cache when fetching by suite. TIP: If you need to find cases by section name/path, use the find_cases_by_path tool instead.`,
     getCasesSchema,
-    withProjectDefault(handleGetCases, client, config.projectId),
+    withProjectDefault(
+      async (c, p) => {
+        // Only use cache for unfiltered suite-level fetches
+        if (p.suite_id && !p.section_id && !p.priority_id && !p.type_id && !p.filter) {
+          const cached = cache.get<Case[]>(p.project_id, 'cases', String(p.suite_id));
+          if (cached) {
+            return {
+              content: [
+                {
+                  type: 'text' as const,
+                  text:
+                    formatCases(cached.data, {
+                      offset: 0,
+                      size: cached.data.length,
+                      limit: cached.data.length,
+                    }) + `\n\n_(cached ${DiskCache.formatAge(cached.ageMs)})_`,
+                },
+              ],
+              structuredContent: {
+                cases: cached.data,
+                pagination: {
+                  offset: 0,
+                  limit: cached.data.length,
+                  size: cached.data.length,
+                  hasMore: false,
+                },
+              },
+            };
+          }
+        }
+        const result = await handleGetCases(c, p);
+        // Cache full suite fetches only
+        if (p.suite_id && !p.section_id && !p.priority_id && !p.type_id && !p.filter) {
+          const cases = result.structuredContent?.cases as Case[];
+          if (cases) cache.set(p.project_id, 'cases', String(p.suite_id), cases);
+        }
+        return result;
+      },
+      client,
+      config.projectId,
+    ),
   );
 
   server.tool(
@@ -170,9 +278,36 @@ export function createServer(config: TestRailConfig) {
 
   server.tool(
     'get_milestones',
-    'List milestones in a TestRail project. Filter by completion/started status.',
+    'List milestones in a TestRail project. Filter by completion/started status. Uses disk cache when unfiltered.',
     getMilestonesSchema,
-    withProjectDefault(handleGetMilestones, client, config.projectId),
+    withProjectDefault(
+      async (c, p) => {
+        if (p.is_completed === undefined && p.is_started === undefined) {
+          const cached = cache.get<Milestone[]>(p.project_id, 'meta', 'milestones');
+          if (cached) {
+            return {
+              content: [
+                {
+                  type: 'text' as const,
+                  text:
+                    formatMilestones(cached.data) +
+                    `\n\n_(cached ${DiskCache.formatAge(cached.ageMs)})_`,
+                },
+              ],
+              structuredContent: { milestones: cached.data },
+            };
+          }
+        }
+        const result = await handleGetMilestones(c, p);
+        if (p.is_completed === undefined && p.is_started === undefined) {
+          const milestones = result.structuredContent?.milestones as Milestone[];
+          if (milestones) cache.set(p.project_id, 'meta', 'milestones', milestones);
+        }
+        return result;
+      },
+      client,
+      config.projectId,
+    ),
   );
 
   server.tool(
@@ -219,23 +354,91 @@ export function createServer(config: TestRailConfig) {
 
   server.tool(
     'get_users',
-    'List TestRail users. Optionally filter by project.',
+    'List TestRail users. Optionally filter by project. Uses disk cache when available.',
     getUsersSchema,
-    wrapHandler(handleGetUsers, client),
+    wrapHandler(async (c, p) => {
+      const cacheKey = `users_${p.project_id ?? 'all'}`;
+      const pid = p.project_id ?? config.projectId;
+      const cached = cache.get<User[]>(pid, 'meta', cacheKey);
+      if (cached) {
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text:
+                formatUsers(cached.data) + `\n\n_(cached ${DiskCache.formatAge(cached.ageMs)})_`,
+            },
+          ],
+          structuredContent: { users: cached.data },
+        };
+      }
+      const result = await handleGetUsers(c, p);
+      const users = result.structuredContent?.users as User[];
+      if (users) cache.set(pid, 'meta', cacheKey, users);
+      return result;
+    }, client),
   );
 
   server.tool(
     'get_suites',
-    `List test suites in a TestRail project (defaults to project ${config.projectId}). Returns suite IDs and names needed for get_sections and get_cases calls.`,
+    `List test suites in a TestRail project (defaults to project ${config.projectId}). Returns suite IDs and names needed for get_sections and get_cases calls. Uses disk cache when available.`,
     getSuitesSchema,
-    withProjectDefault(handleGetSuites, client, config.projectId),
+    withProjectDefault(
+      async (c, p) => {
+        const cached = cache.get<Suite[]>(p.project_id, 'meta', 'suites');
+        if (cached) {
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text:
+                  formatSuites(cached.data) + `\n\n_(cached ${DiskCache.formatAge(cached.ageMs)})_`,
+              },
+            ],
+            structuredContent: { suites: cached.data },
+          };
+        }
+        const result = await handleGetSuites(c, p);
+        const suites = result.structuredContent?.suites as Suite[];
+        if (suites) cache.set(p.project_id, 'meta', 'suites', suites);
+        return result;
+      },
+      client,
+      config.projectId,
+    ),
   );
 
   server.tool(
     'get_sections',
-    `List sections (folder tree) in a TestRail project (defaults to project ${config.projectId}). Requires suite_id for multi-suite projects. Sections have parent_id and depth for hierarchy. Use a section's ID as section_id in get_cases to filter cases. TIP: Use find_cases_by_path if you want to find cases by section name/path directly.`,
+    `List sections (folder tree) in a TestRail project (defaults to project ${config.projectId}). Requires suite_id for multi-suite projects. Sections have parent_id and depth for hierarchy. Use a section's ID as section_id in get_cases to filter cases. TIP: Use find_cases_by_path if you want to find cases by section name/path directly. Uses disk cache when available.`,
     getSectionsSchema,
-    withProjectDefault(handleGetSections, client, config.projectId),
+    withProjectDefault(
+      async (c, p) => {
+        if (p.suite_id) {
+          const cached = cache.get<Section[]>(p.project_id, 'sections', String(p.suite_id));
+          if (cached) {
+            return {
+              content: [
+                {
+                  type: 'text' as const,
+                  text:
+                    formatSections(cached.data) +
+                    `\n\n_(cached ${DiskCache.formatAge(cached.ageMs)})_`,
+                },
+              ],
+              structuredContent: { sections: cached.data },
+            };
+          }
+        }
+        const result = await handleGetSections(c, p);
+        const sections = result.structuredContent?.sections as Section[];
+        if (sections && p.suite_id)
+          cache.set(p.project_id, 'sections', String(p.suite_id), sections);
+        return result;
+      },
+      client,
+      config.projectId,
+    ),
   );
 
   // ─── Write tools ────────────────────────────────────────────
@@ -270,23 +473,168 @@ export function createServer(config: TestRailConfig) {
 
   server.tool(
     'find_cases_by_path',
-    `Find test cases by navigating the TestRail hierarchy using suite name and section path. This is the PREFERRED tool when the user provides a path like "Suite > Section > Subsection" or asks for cases in a named section. It resolves the suite, traverses the section tree, and returns all matching cases with IDs, titles, and priorities in a formatted table. Project defaults to ${config.projectId}.`,
+    `Find test cases by navigating the TestRail hierarchy using suite name and section path. This is the PREFERRED tool when the user provides a path like "Suite > Section > Subsection" or asks for cases in a named section. It resolves the suite, traverses the section tree, and returns all matching cases with IDs, titles, and priorities in a formatted table. Project defaults to ${config.projectId}. Uses disk cache when available.`,
     findCasesByPathSchema,
-    withProjectDefault(handleFindCasesByPath, client, config.projectId),
+    withProjectDefault((c, p) => handleFindCasesByPath(c, p, cache), client, config.projectId),
   );
 
   server.tool(
     'add_case',
     'Create a new test case in a section. Supports steps, preconditions, and custom fields.',
     addCaseSchema,
-    wrapHandler(handleAddCase, client),
+    wrapHandler(async (c, p) => {
+      const result = await handleAddCase(c, p);
+      // Invalidate cases cache for the suite this case belongs to
+      const createdCase = result.structuredContent?.case as Case | undefined;
+      if (createdCase?.suite_id) {
+        cache.invalidate(config.projectId, 'cases', String(createdCase.suite_id));
+      }
+      return result;
+    }, client),
   );
 
   server.tool(
     'update_case',
     'Update an existing test case. Only provide fields you want to change.',
     updateCaseSchema,
-    wrapHandler(handleUpdateCase, client),
+    wrapHandler(async (c, p) => {
+      const result = await handleUpdateCase(c, p);
+      const updatedCase = result.structuredContent?.case as Case | undefined;
+      if (updatedCase?.suite_id) {
+        cache.invalidate(config.projectId, 'cases', String(updatedCase.suite_id));
+      }
+      return result;
+    }, client),
+  );
+
+  // ─── Cache management tools ─────────────────────────────────
+
+  server.tool(
+    'get_cache_status',
+    `Show disk cache status for a project — file counts, sizes, ages. Project defaults to ${config.projectId}.`,
+    getCacheStatusSchema,
+    async (params: { project_id?: number }) => {
+      try {
+        return await handleGetCacheStatus(cache, {
+          project_id: params.project_id ?? config.projectId,
+        });
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : String(error);
+        return {
+          content: [{ type: 'text' as const, text: `Error: ${msg}` }],
+          isError: true as const,
+        };
+      }
+    },
+  );
+
+  server.tool(
+    'invalidate_cache',
+    `Invalidate (clear) the disk cache. Optionally scope to a specific project or suite. Next data fetch will pull fresh data from TestRail.`,
+    invalidateCacheSchema,
+    async (params: { project_id?: number; suite_id?: number }) => {
+      try {
+        return await handleInvalidateCache(cache, params);
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : String(error);
+        return {
+          content: [{ type: 'text' as const, text: `Error: ${msg}` }],
+          isError: true as const,
+        };
+      }
+    },
+  );
+
+  server.tool(
+    'refresh_cache',
+    `Force re-fetch and cache semi-static data (suites, sections, cases, milestones, users) from TestRail. Optionally scope to a single suite. Project defaults to ${config.projectId}.`,
+    refreshCacheSchema,
+    async (params: { project_id?: number; suite_id?: number }) => {
+      try {
+        const projectId = params.project_id ?? config.projectId;
+        const refreshed: string[] = [];
+
+        if (params.suite_id) {
+          // Refresh only one suite's sections and cases
+          const sectionsRaw = await client.getPaginated<Section>(`get_sections/${projectId}`, {
+            suite_id: params.suite_id,
+          });
+          cache.set(projectId, 'sections', String(params.suite_id), sectionsRaw.items);
+          refreshed.push(
+            `sections for suite ${params.suite_id} (${sectionsRaw.items.length} sections)`,
+          );
+
+          const casesRaw = await client.getPaginated<Case>(`get_cases/${projectId}`, {
+            suite_id: params.suite_id,
+          });
+          cache.set(projectId, 'cases', String(params.suite_id), casesRaw.items);
+          refreshed.push(`cases for suite ${params.suite_id} (${casesRaw.items.length} cases)`);
+        } else {
+          // Refresh suites
+          const suitesRaw = await client.getPaginated<Suite>(`get_suites/${projectId}`, {});
+          cache.set(projectId, 'meta', 'suites', suitesRaw.items);
+          refreshed.push(`suites (${suitesRaw.items.length})`);
+
+          // Refresh milestones
+          const milestonesRaw = await client.getPaginated<Milestone>(
+            `get_milestones/${projectId}`,
+            {},
+          );
+          cache.set(projectId, 'meta', 'milestones', milestonesRaw.items);
+          refreshed.push(`milestones (${milestonesRaw.items.length})`);
+
+          // Refresh users
+          const usersRaw = await client.get<User[]>(`get_users/${projectId}`);
+          cache.set(projectId, 'meta', 'users', usersRaw);
+          refreshed.push(`users (${usersRaw.length})`);
+
+          // Refresh sections and cases per suite
+          for (const suite of suitesRaw.items) {
+            const sectionsRaw = await client.getPaginated<Section>(`get_sections/${projectId}`, {
+              suite_id: suite.id,
+            });
+            cache.set(projectId, 'sections', String(suite.id), sectionsRaw.items);
+
+            const casesRaw = await client.getPaginated<Case>(`get_cases/${projectId}`, {
+              suite_id: suite.id,
+            });
+            cache.set(projectId, 'cases', String(suite.id), casesRaw.items);
+            refreshed.push(
+              `suite "${suite.name}" (${sectionsRaw.items.length} sections, ${casesRaw.items.length} cases)`,
+            );
+          }
+        }
+
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text:
+                `Cache refreshed for project ${projectId}:\n\n` +
+                refreshed.map((r) => `- ${r}`).join('\n'),
+            },
+          ],
+          structuredContent: { projectId, refreshed },
+        };
+      } catch (error) {
+        if (error instanceof TestRailApiError) {
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text: `TestRail API Error (${error.statusCode}): ${error.message}`,
+              },
+            ],
+            isError: true as const,
+          };
+        }
+        const msg = error instanceof Error ? error.message : String(error);
+        return {
+          content: [{ type: 'text' as const, text: `Error: ${msg}` }],
+          isError: true as const,
+        };
+      }
+    },
   );
 
   // ─── Resources ──────────────────────────────────────────────
@@ -353,7 +701,11 @@ export function createServer(config: TestRailConfig) {
     'find_test_cases',
     'Navigate TestRail hierarchy to find test cases. Use this when given a path like "Suite > Section > Subsection" or when searching for cases by name.',
     {
-      path: z.string().describe('Hierarchical path to test cases, e.g. "PCAI Test Suite > PCAI FQA > Platform Setup AIE" or just a search term'),
+      path: z
+        .string()
+        .describe(
+          'Hierarchical path to test cases, e.g. "PCAI Test Suite > PCAI FQA > Platform Setup AIE" or just a search term',
+        ),
     },
     ({ path }) => ({
       messages: [
@@ -455,7 +807,11 @@ Present a dashboard with:
     'Submit test results for one or more test cases in a run.',
     {
       run_id: z.string().describe('The test run ID'),
-      results: z.string().describe('Comma-separated list of "case_id:status" pairs, e.g. "101:1,102:5,103:2" where 1=Passed, 2=Blocked, 4=Retest, 5=Failed'),
+      results: z
+        .string()
+        .describe(
+          'Comma-separated list of "case_id:status" pairs, e.g. "101:1,102:5,103:2" where 1=Passed, 2=Blocked, 4=Retest, 5=Failed',
+        ),
     },
     ({ run_id, results }) => ({
       messages: [

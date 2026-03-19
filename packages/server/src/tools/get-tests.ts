@@ -15,15 +15,10 @@ export async function handleGetTests(
   const queryParams: Record<string, string | number | boolean> = {};
   if (params.status_id) queryParams.status_id = params.status_id;
 
-  const response = await client.getPaginated<Test>(
-    `get_tests/${params.run_id}`,
-    queryParams,
-  );
+  const response = await client.getPaginated<Test>(`get_tests/${params.run_id}`, queryParams);
 
   return {
-    content: [
-      { type: 'text' as const, text: formatTests(response.items) },
-    ],
+    content: [{ type: 'text' as const, text: formatTests(response.items) }],
     structuredContent: {
       tests: response.items,
     },

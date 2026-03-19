@@ -1,4 +1,6 @@
 import type { TestRailConfig } from './testrail/types.js';
+import { join } from 'node:path';
+import { homedir } from 'node:os';
 
 export class ConfigError extends Error {
   constructor(message: string) {
@@ -23,7 +25,7 @@ function optionalEnv(name: string, defaultValue?: string): string | undefined {
 
 function normalizeUrl(url: string): string {
   // Strip trailing slashes
-  let normalized = url.replace(/\/+$/, '');
+  const normalized = url.replace(/\/+$/, '');
   // Ensure https in production
   if (process.env.NODE_ENV === 'production' && !normalized.startsWith('https://')) {
     throw new ConfigError('TESTRAIL_BASE_URL must use HTTPS in production');
@@ -35,6 +37,15 @@ function normalizeUrl(url: string): string {
     throw new ConfigError(`Invalid TESTRAIL_BASE_URL: ${normalized}`);
   }
   return normalized;
+}
+
+function parseCacheTtl(): number {
+  const hoursStr = optionalEnv('TESTRAIL_CACHE_TTL_HOURS', '168')!; // 7 days
+  const hours = parseInt(hoursStr, 10);
+  if (isNaN(hours) || hours <= 0) {
+    throw new ConfigError('TESTRAIL_CACHE_TTL_HOURS must be a positive integer');
+  }
+  return hours * 3600 * 1000;
 }
 
 export function loadConfig(): TestRailConfig {
@@ -67,6 +78,9 @@ export function loadConfig(): TestRailConfig {
     projectId,
     timeoutMs,
     maxResults,
+    cacheDir: optionalEnv('TESTRAIL_CACHE_DIR', join(homedir(), '.testrail-mcp-cache'))!,
+    cacheTtlMs: parseCacheTtl(),
+    cacheEnabled: optionalEnv('TESTRAIL_CACHE_ENABLED', 'true')! !== 'false',
   };
 }
 
@@ -79,5 +93,8 @@ export function maskConfig(config: TestRailConfig): Record<string, unknown> {
     projectId: config.projectId,
     timeoutMs: config.timeoutMs,
     maxResults: config.maxResults,
+    cacheDir: config.cacheDir,
+    cacheTtlHours: Math.round(config.cacheTtlMs / 3600000),
+    cacheEnabled: config.cacheEnabled,
   };
 }

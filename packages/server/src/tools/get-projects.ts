@@ -27,10 +27,7 @@ export const getProjectSchema = {
   project_id: z.number().int().positive().describe('TestRail project ID'),
 };
 
-export async function handleGetProject(
-  client: TestRailClient,
-  params: { project_id: number },
-) {
+export async function handleGetProject(client: TestRailClient, params: { project_id: number }) {
   const project = await client.get<Project>(`get_project/${params.project_id}`);
   return {
     content: [{ type: 'text' as const, text: formatProject(project) }],

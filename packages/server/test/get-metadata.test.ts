@@ -27,8 +27,28 @@ describe('handleGetStatuses', () => {
   it('should return formatted statuses', async () => {
     const client = createMockClient({
       getCached: vi.fn().mockResolvedValue([
-        { id: 1, name: 'passed', label: 'Passed', color_dark: 0, color_medium: 0, color_bright: 0, is_system: true, is_untested: false, is_final: true },
-        { id: 5, name: 'failed', label: 'Failed', color_dark: 0, color_medium: 0, color_bright: 0, is_system: true, is_untested: false, is_final: true },
+        {
+          id: 1,
+          name: 'passed',
+          label: 'Passed',
+          color_dark: 0,
+          color_medium: 0,
+          color_bright: 0,
+          is_system: true,
+          is_untested: false,
+          is_final: true,
+        },
+        {
+          id: 5,
+          name: 'failed',
+          label: 'Failed',
+          color_dark: 0,
+          color_medium: 0,
+          color_bright: 0,
+          is_system: true,
+          is_untested: false,
+          is_final: true,
+        },
       ]),
     });
 
@@ -89,9 +109,11 @@ describe('handleGetCaseTypes', () => {
 describe('handleGetCaseFields', () => {
   it('should return formatted case fields', async () => {
     const client = createMockClient({
-      getCached: vi.fn().mockResolvedValue([
-        { id: 1, label: 'Steps', system_name: 'custom_steps', type_id: 11, is_active: true },
-      ]),
+      getCached: vi
+        .fn()
+        .mockResolvedValue([
+          { id: 1, label: 'Steps', system_name: 'custom_steps', type_id: 11, is_active: true },
+        ]),
     });
 
     const result = await handleGetCaseFields(client);
@@ -112,9 +134,11 @@ describe('handleGetCaseFields', () => {
 describe('handleGetResultFields', () => {
   it('should return formatted result fields', async () => {
     const client = createMockClient({
-      getCached: vi.fn().mockResolvedValue([
-        { id: 1, label: 'Comment', system_name: 'comment', type_id: 3, is_active: true },
-      ]),
+      getCached: vi
+        .fn()
+        .mockResolvedValue([
+          { id: 1, label: 'Comment', system_name: 'comment', type_id: 3, is_active: true },
+        ]),
     });
 
     const result = await handleGetResultFields(client);
@@ -160,7 +184,14 @@ describe('handleGetUsers', () => {
   it('should return formatted users', async () => {
     const client = createMockClient({
       getCached: vi.fn().mockResolvedValue([
-        { id: 1, name: 'John Doe', email: 'john@example.com', is_active: true, role_id: 1, role: 'Admin' },
+        {
+          id: 1,
+          name: 'John Doe',
+          email: 'john@example.com',
+          is_active: true,
+          role_id: 1,
+          role: 'Admin',
+        },
       ]),
     });
 
@@ -182,9 +213,21 @@ describe('handleGetSuites', () => {
   it('should return formatted suites', async () => {
     const client = createMockClient({
       getPaginated: vi.fn().mockResolvedValue({
-        offset: 0, limit: 250, size: 1, _links: { next: null, prev: null },
+        offset: 0,
+        limit: 250,
+        size: 1,
+        _links: { next: null, prev: null },
         items: [
-          { id: 1, name: 'Master Suite', description: 'Main suite', url: 'https://example.testrail.io/suites/1', project_id: 1, is_master: true, is_baseline: false, is_completed: false },
+          {
+            id: 1,
+            name: 'Master Suite',
+            description: 'Main suite',
+            url: 'https://example.testrail.io/suites/1',
+            project_id: 1,
+            is_master: true,
+            is_baseline: false,
+            is_completed: false,
+          },
         ],
       }),
     });
@@ -199,10 +242,29 @@ describe('handleGetSections', () => {
   it('should return formatted sections', async () => {
     const client = createMockClient({
       getPaginated: vi.fn().mockResolvedValue({
-        offset: 0, limit: 250, size: 2, _links: { next: null, prev: null },
+        offset: 0,
+        limit: 250,
+        size: 2,
+        _links: { next: null, prev: null },
         items: [
-          { id: 1, name: 'Login', depth: 0, parent_id: null, display_order: 1, suite_id: 1, description: null },
-          { id: 2, name: 'Sub-Login', depth: 1, parent_id: 1, display_order: 1, suite_id: 1, description: 'Sub section' },
+          {
+            id: 1,
+            name: 'Login',
+            depth: 0,
+            parent_id: null,
+            display_order: 1,
+            suite_id: 1,
+            description: null,
+          },
+          {
+            id: 2,
+            name: 'Sub-Login',
+            depth: 1,
+            parent_id: 1,
+            display_order: 1,
+            suite_id: 1,
+            description: 'Sub section',
+          },
         ],
       }),
     });
@@ -214,7 +276,11 @@ describe('handleGetSections', () => {
 
   it('should pass suite_id filter', async () => {
     const getPaginatedSpy = vi.fn().mockResolvedValue({
-      offset: 0, limit: 250, size: 0, _links: { next: null, prev: null }, items: [],
+      offset: 0,
+      limit: 250,
+      size: 0,
+      _links: { next: null, prev: null },
+      items: [],
     });
     const client = createMockClient({ getPaginated: getPaginatedSpy });
 

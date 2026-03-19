@@ -25,6 +25,26 @@ describe('loadConfig', () => {
     expect(config.projectId).toBe(1);
     expect(config.timeoutMs).toBe(30000);
     expect(config.maxResults).toBe(250);
+    expect(config.cacheEnabled).toBe(true);
+    expect(config.cacheTtlMs).toBe(7 * 24 * 3600000);
+  });
+
+  it('should load custom cache TTL', () => {
+    process.env.TESTRAIL_CACHE_TTL_HOURS = '48';
+    const config = loadConfig();
+    expect(config.cacheTtlMs).toBe(48 * 3600000);
+  });
+
+  it('should disable cache when TESTRAIL_CACHE_ENABLED is false', () => {
+    process.env.TESTRAIL_CACHE_ENABLED = 'false';
+    const config = loadConfig();
+    expect(config.cacheEnabled).toBe(false);
+  });
+
+  it('should load custom cache dir', () => {
+    process.env.TESTRAIL_CACHE_DIR = '/custom/cache';
+    const config = loadConfig();
+    expect(config.cacheDir).toBe('/custom/cache');
   });
 
   it('should load custom project ID', () => {
@@ -114,6 +134,9 @@ describe('maskConfig', () => {
       projectId: 1,
       timeoutMs: 30000,
       maxResults: 250,
+      cacheDir: '/tmp/testrail-cache',
+      cacheTtlMs: 604800000,
+      cacheEnabled: true,
     };
     const masked = maskConfig(config);
     expect(masked.apiKey).toBe('***');

@@ -18,7 +18,19 @@ import {
   statusLabel,
   paginationInfo,
 } from '../src/formatter.js';
-import type { Project, Case, Run, Result, Test, Plan, Milestone, Suite, Section, User, Status } from '../src/testrail/types.js';
+import type {
+  Project,
+  Case,
+  Run,
+  Result,
+  Test,
+  Plan,
+  Milestone,
+  Suite,
+  Section,
+  User,
+  Status,
+} from '../src/testrail/types.js';
 
 import projectsFixture from './fixtures/projects.json';
 import casesFixture from './fixtures/cases.json';
@@ -189,8 +201,24 @@ describe('formatSections', () => {
 
   it('should format with indentation', () => {
     const sections = [
-      { id: 1, suite_id: 1, name: 'Login', description: null, parent_id: null, display_order: 1, depth: 0 },
-      { id: 2, suite_id: 1, name: 'Sub Login', description: null, parent_id: 1, display_order: 1, depth: 1 },
+      {
+        id: 1,
+        suite_id: 1,
+        name: 'Login',
+        description: null,
+        parent_id: null,
+        display_order: 1,
+        depth: 0,
+      },
+      {
+        id: 2,
+        suite_id: 1,
+        name: 'Sub Login',
+        description: null,
+        parent_id: 1,
+        display_order: 1,
+        depth: 1,
+      },
     ] as Section[];
     const result = formatSections(sections);
     expect(result).toContain('Login');
@@ -234,7 +262,10 @@ describe('output truncation', () => {
 describe('paginationInfo', () => {
   it('should return pagination message when more results exist', () => {
     const result = paginationInfo({
-      offset: 0, limit: 250, size: 500, items: Array(250),
+      offset: 0,
+      limit: 250,
+      size: 500,
+      items: Array(250),
       _links: { next: '/api/v2/get_cases/1&offset=250', prev: null },
     });
     expect(result).toContain('Showing 250 of 500');
@@ -243,7 +274,10 @@ describe('paginationInfo', () => {
 
   it('should return empty string when no more results', () => {
     const result = paginationInfo({
-      offset: 0, limit: 250, size: 10, items: Array(10),
+      offset: 0,
+      limit: 250,
+      size: 10,
+      items: Array(10),
       _links: { next: null, prev: null },
     });
     expect(result).toBe('');

@@ -47,6 +47,26 @@ A **Model Context Protocol (MCP) server** for [TestRail](https://www.testrail.co
 
 ## Quick Start
 
+### VS Code Extension
+
+Install  VS Code extension [TestRail MCP Server VS Code extension](https://marketplace.visualstudio.com/search?term=TestRail%20MCP%20Server&target=VSCode&category=AI&sortBy=Relevance) that one by `fazorboy` .
+
+## Configuration
+
+| Setting (VS Code)         | Env Var                    | Required | Default                  | Description |
+|--------------------------|----------------------------|----------|--------------------------|-------------|
+| `testrailMcp.apiKey`     | `TESTRAIL_API_KEY`         | Yes      | —                        | TestRail API key (generate at My Settings > API Keys) |
+| `testrailMcp.baseUrl`    | `TESTRAIL_BASE_URL`        | Yes      | —                        | TestRail instance URL (e.g., `https://company.testrail.io`) |
+| `testrailMcp.username`   | `TESTRAIL_USERNAME`        | Yes      | —                        | TestRail username (email address) |
+| `testrailMcp.projectId`  | `TESTRAIL_PROJECT_ID`      | Yes      | —                        | Default project ID (used when not specified in tool params) |
+| `testrailMcp.timeout`    | `TESTRAIL_TIMEOUT_MS`      | No       | `30000`                  | HTTP request timeout in milliseconds |
+| `testrailMcp.maxResults` | `TESTRAIL_MAX_RESULTS`     | No       | `250`                    | Default page size for list queries (max 250) |
+| `testrailMcp.cacheEnabled` | `TESTRAIL_CACHE_ENABLED`  | No       | `true`                   | Enable disk caching for semi-static TestRail data |
+| `testrailMcp.cacheTtlHours` | `TESTRAIL_CACHE_TTL_HOURS` | No     | `168` (7 days)           | Cache time-to-live in hours |
+| `testrailMcp.cacheDir`   | `TESTRAIL_CACHE_DIR`       | No       | `~/.testrail-mcp-cache`  | Directory for disk cache files |
+
+--- 
+
 ### Standalone (stdio transport)
 
 ```bash
@@ -83,35 +103,6 @@ Add to your MCP client config:
   }
 }
 ```
-
-### VS Code (`.vscode/mcp.json`)
-
-For local development, point to the built server:
-
-```json
-{
-  "servers": {
-    "testrail": {
-      "command": "node",
-      "args": ["${workspaceFolder}/packages/server/dist/index.js"],
-      "env": {
-        "TESTRAIL_BASE_URL": "https://your-instance.testrail.io",
-        "TESTRAIL_USERNAME": "your-email@example.com",
-        "TESTRAIL_API_KEY": "your-api-key",
-        "TESTRAIL_PROJECT_ID": "1"
-      }
-    }
-  }
-}
-```
-
-### VS Code Extension
-
-1. Install the `.vsix` file
-2. Set these VS Code settings:
-   - `testrailMcp.baseUrl` — Your TestRail instance URL
-   - `testrailMcp.username` — Your TestRail username (email)
-   - `testrailMcp.apiKey` — Your TestRail API key
 
 ## Configuration
 
@@ -250,45 +241,6 @@ What test plans are currently active?
 List all users who can be assigned tests
 
 What custom case fields and statuses are available?
-```
-
-## Development
-
-```bash
-# Install dependencies
-pnpm install
-
-# Build all packages
-pnpm build
-
-# Run tests
-pnpm test
-
-# Run tests with coverage
-pnpm test:coverage
-
-# Lint
-pnpm lint
-
-# Format
-pnpm format
-
-# Typecheck
-pnpm typecheck
-
-# Full CI validation
-pnpm ci
-```
-
-### Testing with MCP Inspector
-
-```bash
-cd packages/server
-TESTRAIL_BASE_URL=https://your-instance.testrail.io \
-TESTRAIL_USERNAME=your-email@example.com \
-TESTRAIL_API_KEY=your-api-key \
-TESTRAIL_PROJECT_ID=1 \
-npx @modelcontextprotocol/inspector node dist/index.js
 ```
 
 ## License

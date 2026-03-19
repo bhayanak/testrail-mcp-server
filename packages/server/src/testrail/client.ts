@@ -115,10 +115,7 @@ export class TestRailClient {
 
   // ─── Internals ───────────────────────────────────────────────
 
-  private buildUrl(
-    endpoint: string,
-    params?: Record<string, string | number | boolean>,
-  ): string {
+  private buildUrl(endpoint: string, params?: Record<string, string | number | boolean>): string {
     const sep = endpoint.startsWith('/') ? '' : '/';
     let url = `${this.baseUrl}${sep}${endpoint}`;
     if (params && Object.keys(params).length > 0) {

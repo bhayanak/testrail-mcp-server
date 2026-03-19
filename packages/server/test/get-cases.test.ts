@@ -33,7 +33,11 @@ describe('handleGetCases', () => {
 
   it('should pass all filter params', async () => {
     const getPaginatedSpy = vi.fn().mockResolvedValue({
-      offset: 0, limit: 250, size: 0, _links: { next: null, prev: null }, items: [],
+      offset: 0,
+      limit: 250,
+      size: 0,
+      _links: { next: null, prev: null },
+      items: [],
     });
     const client = createMockClient({ getPaginated: getPaginatedSpy });
 
@@ -58,7 +62,11 @@ describe('handleGetCases', () => {
   it('should handle empty results', async () => {
     const client = createMockClient({
       getPaginated: vi.fn().mockResolvedValue({
-        offset: 0, limit: 250, size: 0, _links: { next: null, prev: null }, items: [],
+        offset: 0,
+        limit: 250,
+        size: 0,
+        _links: { next: null, prev: null },
+        items: [],
       }),
     });
 

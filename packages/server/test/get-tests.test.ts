@@ -17,10 +17,20 @@ describe('handleGetTests', () => {
   it('should return formatted tests', async () => {
     const client = createMockClient({
       getPaginated: vi.fn().mockResolvedValue({
-        offset: 0, limit: 250, size: 2, _links: { next: null, prev: null },
+        offset: 0,
+        limit: 250,
+        size: 2,
+        _links: { next: null, prev: null },
         items: [
           { id: 1, case_id: 100, status_id: 1, title: 'Login test', assignedto_id: 10, run_id: 1 },
-          { id: 2, case_id: 101, status_id: 5, title: 'Logout test', assignedto_id: null, run_id: 1 },
+          {
+            id: 2,
+            case_id: 101,
+            status_id: 5,
+            title: 'Logout test',
+            assignedto_id: null,
+            run_id: 1,
+          },
         ],
       }),
     });
@@ -33,7 +43,11 @@ describe('handleGetTests', () => {
   it('should handle empty tests', async () => {
     const client = createMockClient({
       getPaginated: vi.fn().mockResolvedValue({
-        offset: 0, limit: 250, size: 0, _links: { next: null, prev: null }, items: [],
+        offset: 0,
+        limit: 250,
+        size: 0,
+        _links: { next: null, prev: null },
+        items: [],
       }),
     });
 
@@ -43,7 +57,11 @@ describe('handleGetTests', () => {
 
   it('should pass status_id filter', async () => {
     const getPaginatedSpy = vi.fn().mockResolvedValue({
-      offset: 0, limit: 250, size: 0, _links: { next: null, prev: null }, items: [],
+      offset: 0,
+      limit: 250,
+      size: 0,
+      _links: { next: null, prev: null },
+      items: [],
     });
     const client = createMockClient({ getPaginated: getPaginatedSpy });
 

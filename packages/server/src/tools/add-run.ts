@@ -4,14 +4,28 @@ import type { Run } from '../testrail/types.js';
 import { formatRun } from '../formatter.js';
 
 export const addRunSchema = {
-  project_id: z.number().int().positive().optional().describe('TestRail project ID (defaults to configured project)'),
-  suite_id: z.number().int().positive().optional().describe('Suite ID (required for multi-suite projects)'),
+  project_id: z
+    .number()
+    .int()
+    .positive()
+    .optional()
+    .describe('TestRail project ID (defaults to configured project)'),
+  suite_id: z
+    .number()
+    .int()
+    .positive()
+    .optional()
+    .describe('Suite ID (required for multi-suite projects)'),
   name: z.string().min(1).max(250).describe('Run name'),
   description: z.string().max(50000).optional().describe('Run description'),
   milestone_id: z.number().int().positive().optional().describe('Milestone ID'),
   assignedto_id: z.number().int().positive().optional().describe('Assigned user ID'),
   include_all: z.boolean().optional().describe('Include all test cases (default true)'),
-  case_ids: z.array(z.number().int().positive()).max(2000).optional().describe('Specific case IDs to include'),
+  case_ids: z
+    .array(z.number().int().positive())
+    .max(2000)
+    .optional()
+    .describe('Specific case IDs to include'),
 };
 
 export async function handleAddRun(
@@ -52,10 +66,7 @@ export const closeRunSchema = {
   run_id: z.number().int().positive().describe('TestRail run ID to close'),
 };
 
-export async function handleCloseRun(
-  client: TestRailClient,
-  params: { run_id: number },
-) {
+export async function handleCloseRun(client: TestRailClient, params: { run_id: number }) {
   const run = await client.post<Run>(`close_run/${params.run_id}`);
   return {
     content: [

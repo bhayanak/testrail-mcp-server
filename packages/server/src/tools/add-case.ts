@@ -53,10 +53,7 @@ export async function handleAddCase(
   if (params.custom_steps) body.custom_steps = params.custom_steps;
   if (params.custom_expected) body.custom_expected = params.custom_expected;
 
-  const testCase = await client.post<Case>(
-    `add_case/${params.section_id}`,
-    body,
-  );
+  const testCase = await client.post<Case>(`add_case/${params.section_id}`, body);
 
   return {
     content: [

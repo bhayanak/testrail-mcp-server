@@ -6,7 +6,11 @@ import { statusLabel } from '../formatter.js';
 export const addResultForCaseSchema = {
   run_id: z.number().int().positive().describe('TestRail run ID'),
   case_id: z.number().int().positive().describe('TestRail case ID'),
-  status_id: z.number().int().min(1).describe('Status ID (1=Passed, 2=Blocked, 4=Retest, 5=Failed)'),
+  status_id: z
+    .number()
+    .int()
+    .min(1)
+    .describe('Status ID (1=Passed, 2=Blocked, 4=Retest, 5=Failed)'),
   comment: z.string().max(50000).optional().describe('Result comment'),
   elapsed: z.string().max(50).optional().describe('Time spent (e.g., "30s", "1m 45s")'),
   defects: z.string().max(1000).optional().describe('Comma-separated defect IDs'),
@@ -49,13 +53,19 @@ export async function handleAddResultForCase(
 
 export const addResultsForCasesSchema = {
   run_id: z.number().int().positive().describe('TestRail run ID'),
-  results: z.array(z.object({
-    case_id: z.number().int().positive().describe('TestRail case ID'),
-    status_id: z.number().int().min(1).describe('Status ID'),
-    comment: z.string().max(50000).optional().describe('Result comment'),
-    elapsed: z.string().max(50).optional().describe('Time spent'),
-    defects: z.string().max(1000).optional().describe('Defect IDs'),
-  })).min(1).max(250).describe('Array of results to submit'),
+  results: z
+    .array(
+      z.object({
+        case_id: z.number().int().positive().describe('TestRail case ID'),
+        status_id: z.number().int().min(1).describe('Status ID'),
+        comment: z.string().max(50000).optional().describe('Result comment'),
+        elapsed: z.string().max(50).optional().describe('Time spent'),
+        defects: z.string().max(1000).optional().describe('Defect IDs'),
+      }),
+    )
+    .min(1)
+    .max(250)
+    .describe('Array of results to submit'),
 };
 
 export async function handleAddResultsForCases(
@@ -71,17 +81,17 @@ export async function handleAddResultsForCases(
     }>;
   },
 ) {
-  const results = await client.post<Result[]>(
-    `add_results_for_cases/${params.run_id}`,
-    { results: params.results },
-  );
+  const results = await client.post<Result[]>(`add_results_for_cases/${params.run_id}`, {
+    results: params.results,
+  });
 
   const items = Array.isArray(results) ? results : [];
   return {
     content: [
       {
         type: 'text' as const,
-        text: `Added ${items.length} result(s) for run R${params.run_id}:\n` +
+        text:
+          `Added ${items.length} result(s) for run R${params.run_id}:\n` +
           params.results.map((r) => `- C${r.case_id}: ${statusLabel(r.status_id)}`).join('\n'),
       },
     ],

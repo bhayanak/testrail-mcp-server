@@ -9,6 +9,9 @@ export interface TestRailConfig {
   projectId: number;
   timeoutMs: number;
   maxResults: number;
+  cacheDir: string;
+  cacheTtlMs: number;
+  cacheEnabled: boolean;
 }
 
 // ─── Pagination ──────────────────────────────────────────────────

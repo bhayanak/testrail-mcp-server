@@ -8,6 +8,9 @@ const testConfig = {
   projectId: 1,
   timeoutMs: 30000,
   maxResults: 250,
+  cacheDir: '/tmp/testrail-test-cache',
+  cacheTtlMs: 604800000,
+  cacheEnabled: false,
 };
 
 describe('createServer', () => {
