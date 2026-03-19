@@ -15,7 +15,7 @@ A **Model Context Protocol (MCP) server** for [TestRail](https://www.testrail.co
 - **Reference Data Caching** — Statuses, priorities, case types cached for 5 minutes
 
 ## Installation
-Its available at : [TestRail MCP Server](https://www.npmjs.com/package/testrail-mcp-server) and exposes it to AI assistants (GitHub Copilot, Claude, etc.) directly in your editor.
+Its available at : [TestRail MCP Server](https://www.npmjs.com/package/@fazorboy/testrail-mcp-server) and exposes it to AI assistants (GitHub Copilot, Claude, etc.) directly in your editor.
 ```bash
 npm install -g @testrail-mcp/server
 ```

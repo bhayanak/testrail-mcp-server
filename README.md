@@ -71,7 +71,7 @@ Install  VS Code extension [TestRail MCP Server VS Code extension](https://marke
 
 ```bash
 # Install
-npm install -g testrail-mcp-server
+npm install -g @fazorboy/testrail-mcp-server
 
 # Configure
 export TESTRAIL_BASE_URL="https://your-instance.testrail.io"

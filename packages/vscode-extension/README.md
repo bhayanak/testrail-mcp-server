@@ -1,6 +1,6 @@
 # TestRail MCP Server — VS Code Extension
 
-A VS Code extension [TestRail MCP Server VS Code extension](https://marketplace.visualstudio.com/search?term=TestRail%20MCP%20Server&target=VSCode&category=AI&sortBy=Relevance) that bundles the [TestRail MCP Server](https://www.npmjs.com/package/testrail-mcp-server) and exposes it to AI assistants (GitHub Copilot, Claude, etc.) directly in your editor.
+A VS Code extension [TestRail MCP Server VS Code extension](https://marketplace.visualstudio.com/search?term=TestRail%20MCP%20Server&target=VSCode&category=AI&sortBy=Relevance) that bundles the [TestRail MCP Server](https://www.npmjs.com/package/@fazorboy/testrail-mcp-server) and exposes it to AI assistants (GitHub Copilot, Claude, etc.) directly in your editor.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/bhayanak/testrail-mcp-server/blob/main/LICENSE)
 [![VS Code ≥1.85](https://img.shields.io/badge/VS%20Code-%3E%3D1.85-blue.svg)](https://code.visualstudio.com/)
