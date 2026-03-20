@@ -161,21 +161,21 @@ export function createServer(config: TestRailConfig) {
 
   server.tool(
     'get_projects',
-    'List all TestRail projects. Optionally filter by completion status.',
+    'List all TestRail projects with IDs, names, and suite modes. Use this to discover available projects. Optionally filter by completion status. NOT for milestones, suites, runs, or test cases — use the dedicated tools for those.',
     getProjectsSchema,
     wrapHandler(handleGetProjects, client),
   );
 
   server.tool(
     'get_project',
-    'Get details for a specific TestRail project by ID.',
+    `Get details for a specific TestRail project by ID — name, announcement, suite mode, counts. Use this for project-level info. For project summaries with milestone/run/suite counts, first call this, then call get_milestones, get_runs, and get_suites separately. Defaults to project ${config.projectId}.`,
     getProjectSchema,
     wrapHandler(handleGetProject, client),
   );
 
   server.tool(
     'get_cases',
-    `List test cases in a TestRail project (defaults to project ${config.projectId}). Requires suite_id for multi-suite projects. Use section_id to filter by section. Supports filtering by priority, type, and text search. Uses disk cache when fetching by suite. TIP: If you need to find cases by section name/path, use the find_cases_by_path tool instead.`,
+    `List test cases by suite or section ID (defaults to project ${config.projectId}). Requires suite_id for multi-suite projects. NOT for listing milestones or test runs — use get_milestones or get_runs. NOT for cases in a test run — use get_tests. TIP: To find cases by name/path (e.g. "Suite > Section"), use find_cases_by_path instead.`,
     getCasesSchema,
     withProjectDefault(
       async (c, p) => {
@@ -222,63 +222,63 @@ export function createServer(config: TestRailConfig) {
 
   server.tool(
     'get_case',
-    'Get full details for a specific test case including steps, preconditions, and custom fields.',
+    'Get full details for a single test case by its case ID — steps, preconditions, custom fields, priority, type. NOT for listing cases (use get_cases) or run results (use get_results_for_case).',
     getCaseSchema,
     wrapHandler(handleGetCase, client),
   );
 
   server.tool(
     'get_runs',
-    'List test runs in a TestRail project. Filter by completion status and milestones.',
+    `List test runs in a TestRail project (defaults to project ${config.projectId}). USE THIS when the user asks about test runs, run names, run list, or runs for a milestone. Filter by is_completed (0=active, 1=completed) and milestone_id. To find a run by name, call this and search the results. NOT for test suites (use get_suites), milestones (use get_milestones), or test cases (use get_cases).`,
     getRunsSchema,
     withProjectDefault(handleGetRuns, client, config.projectId),
   );
 
   server.tool(
     'get_run',
-    'Get detailed info for a specific test run including pass/fail/blocked/untested counts.',
+    'Get detailed info for a specific test run by run ID — name, description, milestone, pass/fail/blocked/untested counts, plan, assignee, and URL. USE THIS for run summary/status. NOT for listing tests in a run (use get_tests) or test results (use get_results_for_run).',
     getRunSchema,
     wrapHandler(handleGetRun, client),
   );
 
   server.tool(
     'get_results_for_run',
-    'Get test results for a specific run. Filter by status IDs.',
+    'Get test results (pass/fail/status entries) for a specific run by run ID. Filter by status_id. USE THIS when the user asks for results, pass/fail details, or test outcomes of a run. NOT for listing test cases in a run (use get_tests) or run metadata (use get_run).',
     getResultsForRunSchema,
     wrapHandler(handleGetResultsForRun, client),
   );
 
   server.tool(
     'get_results_for_case',
-    'Get result history for a specific test case within a specific run.',
+    'Get result history for a specific test case within a specific run. Requires both run_id and case_id. Shows all result entries (pass, fail, retest) over time for one case in one run.',
     getResultsForCaseSchema,
     wrapHandler(handleGetResultsForCase, client),
   );
 
   server.tool(
     'get_tests',
-    'List all tests (test instances) in a test run. Filter by status.',
+    'List all test cases (test instances) associated with a test run by run ID. USE THIS when the user asks "what test cases are in this run" or "get all testcases for run X". Filter by status_id to show only passed/failed/blocked. NOT for test results/outcomes (use get_results_for_run) or standalone case details (use get_cases).',
     getTestsSchema,
     wrapHandler(handleGetTests, client),
   );
 
   server.tool(
     'get_plans',
-    'List test plans in a TestRail project. Filter by completion and milestones.',
+    `List test plans in a TestRail project (defaults to project ${config.projectId}). Filter by is_completed and milestone_id. USE THIS when the user asks about test plans. NOT for test runs (use get_runs) or milestones (use get_milestones).`,
     getPlansSchema,
     withProjectDefault(handleGetPlans, client, config.projectId),
   );
 
   server.tool(
     'get_plan',
-    'Get detailed info for a test plan including entries and associated runs.',
+    'Get detailed info for a specific test plan by plan ID — entries, associated runs, and configurations. NOT for listing plans (use get_plans) or standalone runs (use get_runs).',
     getPlanSchema,
     wrapHandler(handleGetPlan, client),
   );
 
   server.tool(
     'get_milestones',
-    'List milestones in a TestRail project. Filter by completion/started status. Uses disk cache when unfiltered.',
+    `List milestones in a TestRail project (defaults to project ${config.projectId}). Returns milestone IDs, names/titles, due dates, start dates, and completion status. USE THIS when the user asks about milestones, milestone titles, milestone names, due dates, or project schedule. Filter by is_completed and is_started. To find a milestone by name, call this and search the results. NOT for test suites (use get_suites), test runs (use get_runs), or test cases (use get_cases).`,
     getMilestonesSchema,
     withProjectDefault(
       async (c, p) => {
@@ -381,7 +381,7 @@ export function createServer(config: TestRailConfig) {
 
   server.tool(
     'get_suites',
-    `List test suites in a TestRail project (defaults to project ${config.projectId}). Returns suite IDs and names needed for get_sections and get_cases calls. Uses disk cache when available.`,
+    `List test suites in a TestRail project (defaults to project ${config.projectId}). Returns suite IDs and names. ONLY use this when the user asks specifically about test suites/suite names, or when you need a suite_id for get_sections/get_cases. NOT for milestones (use get_milestones), test runs (use get_runs), test results (use get_results_for_run), or project summary (use get_project + get_milestones + get_runs).`,
     getSuitesSchema,
     withProjectDefault(
       async (c, p) => {
@@ -410,7 +410,7 @@ export function createServer(config: TestRailConfig) {
 
   server.tool(
     'get_sections',
-    `List sections (folder tree) in a TestRail project (defaults to project ${config.projectId}). Requires suite_id for multi-suite projects. Sections have parent_id and depth for hierarchy. Use a section's ID as section_id in get_cases to filter cases. TIP: Use find_cases_by_path if you want to find cases by section name/path directly. Uses disk cache when available.`,
+    `List sections (folder tree) within a test suite (defaults to project ${config.projectId}). Requires suite_id. ONLY use this when you need to browse section hierarchy or get a section_id for get_cases. TIP: Use find_cases_by_path instead if the user provides a path. NOT for milestones (use get_milestones), test runs (use get_runs), or test results (use get_results_for_run).`,
     getSectionsSchema,
     withProjectDefault(
       async (c, p) => {
@@ -833,6 +833,79 @@ After submission, call get_run with run_id=${run_id} to show the updated run sum
         },
       ],
     }),
+  );
+
+  server.prompt(
+    'milestone_summary',
+    'Find a milestone by name and show its associated test runs with pass/fail summaries. Use this when asked about a specific milestone.',
+    {
+      milestone_name: z
+        .string()
+        .describe('The milestone name to search for, e.g. "PCBE-RC9"'),
+      project_id: z.string().optional().describe('Project ID (uses configured default if omitted)'),
+    },
+    ({ milestone_name, project_id }) => {
+      const pid = project_id || String(config.projectId);
+      return {
+        messages: [
+          {
+            role: 'user' as const,
+            content: {
+              type: 'text' as const,
+              text: `Find milestone "${milestone_name}" in project ${pid} and give a full summary:
+
+STEP 1: Call get_milestones with project_id=${pid} to get all milestones. Find the one whose name matches or contains "${milestone_name}". Note its id, name, due_on, start_on, is_completed, and description.
+
+STEP 2: Call get_runs with project_id=${pid} and milestone_id=<found_milestone_id> to get all test runs associated with this milestone.
+
+STEP 3: For each run returned, note the run name, passed_count, failed_count, blocked_count, untested_count, and custom_status counts.
+
+Present:
+- Milestone name, due date, start date, completion status, description
+- Total number of test runs associated with this milestone
+- For each run: name, overall status (pass/fail/blocked/untested counts and percentages)
+- Overall milestone summary: total passed, failed, blocked, untested across all runs
+- Overall pass rate percentage for the milestone`,
+            },
+          },
+        ],
+      };
+    },
+  );
+
+  server.prompt(
+    'run_details',
+    'Find a test run by name and show its test cases, results, and summary. Use this when asked about a specific test run.',
+    {
+      run_name: z.string().describe('The test run name to search for, e.g. "VME-8.1.1-primary"'),
+      project_id: z.string().optional().describe('Project ID (uses configured default if omitted)'),
+    },
+    ({ run_name, project_id }) => {
+      const pid = project_id || String(config.projectId);
+      return {
+        messages: [
+          {
+            role: 'user' as const,
+            content: {
+              type: 'text' as const,
+              text: `Find test run "${run_name}" in project ${pid} and show its details:
+
+STEP 1: Call get_runs with project_id=${pid} to get all runs. Search for the one whose name matches or contains "${run_name}". Note its run_id.
+
+STEP 2: Call get_run with run_id=<found_run_id> to get detailed run info including pass/fail/blocked/untested counts.
+
+STEP 3: Call get_tests with run_id=<found_run_id> to list all test cases (test instances) in this run. This shows each test's title, status, and assignee.
+
+Present:
+- Run name, description, milestone, suite, creation date, URL
+- Overall status: passed/failed/blocked/untested counts and percentages
+- List of all test cases in the run with their current status
+- Summary of failures (if any) with test titles and status`,
+            },
+          },
+        ],
+      };
+    },
   );
 
   return server;
