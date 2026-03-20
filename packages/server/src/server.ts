@@ -839,9 +839,7 @@ After submission, call get_run with run_id=${run_id} to show the updated run sum
     'milestone_summary',
     'Find a milestone by name and show its associated test runs with pass/fail summaries. Use this when asked about a specific milestone.',
     {
-      milestone_name: z
-        .string()
-        .describe('The milestone name to search for, e.g. "PCBE-RC9"'),
+      milestone_name: z.string().describe('The milestone name to search for, e.g. "PCBE-RC9"'),
       project_id: z.string().optional().describe('Project ID (uses configured default if omitted)'),
     },
     ({ milestone_name, project_id }) => {
