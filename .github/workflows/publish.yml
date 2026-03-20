@@ -23,7 +23,8 @@ jobs:
           cache: pnpm
           registry-url: "https://registry.npmjs.org"
       - name: Configure npm for scope
-        run: echo "@fazorboy:registry=https://registry.npmjs.org/" >> ~/.npmrc
+        working-directory: packages/server
+        run: echo "@fazorboy:registry=https://registry.npmjs.org/" >> .npmrc
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
       - run: pnpm test
