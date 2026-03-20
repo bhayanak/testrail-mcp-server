@@ -2,7 +2,7 @@
   "name": "testrail-mcp-server",
   "displayName": "TestRail MCP Server",
   "description": "Model Context Protocol server for TestRail — query projects, cases, runs, results, and more from your IDE",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "bhayanak",
   "license": "MIT",
   "repository": {
